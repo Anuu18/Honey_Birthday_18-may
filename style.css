@@ -18,6 +18,7 @@
             color: var(--text);
             font-family: var(--font-display);
             overflow: hidden;
+            overflow-y: auto;
             width: 100vw;
             height: 100vh;
             cursor: crosshair;
