@@ -10,7 +10,7 @@ const CONFIG = {
 
 CONFIG.loopSize = CONFIG.itemCount * CONFIG.zGap;
 
-// 🎉 CHANGED TEXTS (Birthday Theme)
+// 🎉 TEXTS
 const TEXTS = [
     "HAPPY BIRTHDAY HONEY ❤️",
     "MY LOVE 💕",
@@ -37,8 +37,11 @@ const world = document.getElementById('world');
 const viewport = document.getElementById('viewport');
 const items = [];
 
+const isMobile = window.innerWidth <= 768;
+
 // --- INIT ---
 function init() {
+
     for (let i = 0; i < CONFIG.itemCount; i++) {
         const el = document.createElement('div');
         el.className = 'item';
@@ -56,7 +59,6 @@ function init() {
                 type: 'text',
                 x: 0,
                 y: 0,
-                rot: 0,
                 baseZ: -i * CONFIG.zGap
             });
 
@@ -66,7 +68,6 @@ function init() {
 
             const randId = Math.floor(Math.random() * 9999);
 
-            // 🎉 CHANGED CARD TEXT
             card.innerHTML = `
                 <div class="card-header">
                     <span>LOVE-${randId}</span>
@@ -85,7 +86,6 @@ function init() {
                 type: 'card',
                 x,
                 y,
-                rot: (Math.random() - 0.5) * 30,
                 baseZ: -i * CONFIG.zGap
             });
         }
@@ -93,7 +93,7 @@ function init() {
         world.appendChild(el);
     }
 
-    // Stars
+    // stars
     for (let i = 0; i < CONFIG.starCount; i++) {
         const el = document.createElement('div');
         el.className = 'star';
@@ -109,19 +109,41 @@ function init() {
         });
     }
 
-    // Mouse
+    // mouse
     window.addEventListener('mousemove', (e) => {
         state.mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
         state.mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
     });
+
+    // MOBILE TOUCH SCROLL FIX
+    if (isMobile) {
+
+        let touchScroll = 0;
+        let startY = 0;
+
+        window.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+        }, { passive: true });
+
+        window.addEventListener('touchmove', (e) => {
+            const moveY = e.touches[0].clientY;
+            const diff = startY - moveY;
+
+            touchScroll += diff;
+            startY = moveY;
+
+            state.scroll = touchScroll;
+        }, { passive: true });
+    }
 }
 
 init();
 
-// --- LENIS (safe init) ---
+
+// --- LENIS (desktop only) ---
 let lenis = null;
 
-if (typeof Lenis !== "undefined") {
+if (!isMobile && typeof Lenis !== "undefined") {
     lenis = new Lenis({
         smooth: true,
         lerp: 0.08
@@ -132,6 +154,7 @@ if (typeof Lenis !== "undefined") {
         state.targetSpeed = velocity;
     });
 }
+
 
 // --- RAF LOOP ---
 let lastTime = performance.now();
@@ -165,6 +188,7 @@ function raf(time) {
         if (z > 500) z -= mod;
 
         let alpha = 1;
+
         if (z < -3000) alpha = 0;
         else if (z < -2000) alpha = (z + 3000) / 1000;
 
@@ -177,13 +201,16 @@ function raf(time) {
         item.el.style.opacity = alpha;
 
         if (alpha > 0) {
+
             let transform = `translate3d(${item.x}px, ${item.y}px, ${z}px)`;
 
             if (item.type === 'star') {
+
                 const stretch = 1 + Math.abs(state.velocity) * 0.05;
                 transform += ` scale3d(1,1,${stretch})`;
 
             } else if (item.type === 'text') {
+
                 if (Math.abs(state.velocity) > 1) {
                     const offset = state.velocity * 2;
                     item.el.style.textShadow = `${offset}px 0 red, ${-offset}px 0 cyan`;
@@ -204,4 +231,3 @@ function raf(time) {
 }
 
 requestAnimationFrame(raf);
-
